@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  warp-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - WARP_URL=https://downloads.cloudflareclient.com/v1/download/noble-intel/version/2025.4.943.0
+    container_name: warp-socks5-proxy
+    ports:
+      - "51080:1080"
+    restart: unless-stopped    
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+      # Set THE WARP_TOKEN if you want to use ZeroTrust 
+      # it must start with "com.cloudflare.warp://"
+      - WARP_TOKEN=
+    volumes:
+      - ./warp:/var/lib/cloudflare-warp
+    healthcheck:
+      test: ["CMD", "warp-cli", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
