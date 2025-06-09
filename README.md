@@ -1,10 +1,11 @@
-# Cloudflare WARP SOCKS5 Proxy
+# Cloudflare WARP SOCKS5 Proxy (Proxy Mode Only)
 
-A Docker container that provides a SOCKS5 proxy server routing all traffic through Cloudflare WARP. Supports both consumer WARP and Cloudflare for Teams (Zero Trust) configurations.
+A Docker container that provides a SOCKS5 proxy server routing traffic through Cloudflare WARP in **proxy mode only**. This implementation does not support full VPN mode - it only works as a SOCKS5 proxy. Supports both consumer WARP and Cloudflare for Teams (Zero Trust) configurations.
 
 ## 🚀 Features
 
 - **SOCKS5 Proxy Server** on port 1080 (mapped to host port 51080)
+- **Proxy Mode Only** - Routes traffic through WARP proxy, not full VPN tunnel
 - **Cloudflare WARP Integration** with automatic registration and connection
 - **Zero Trust Support** with token-based team registration
 - **Persistent Configuration** with volume mounting
@@ -15,6 +16,23 @@ A Docker container that provides a SOCKS5 proxy server routing all traffic throu
 
 - Docker and Docker Compose
 - For Teams usage: Valid Cloudflare for Teams token from your organization
+- **Important**: For Teams usage, ensure "Proxy Mode" is enabled in your WARP profile settings
+
+## ⚠️ Important Limitations
+
+### Proxy Mode Only
+This container **only supports WARP proxy mode**, not full VPN mode. This means:
+
+- **✅ SOCKS5 Proxy**: Applications must be configured to use the SOCKS5 proxy
+- **❌ System-wide VPN**: Does not route all system traffic automatically  
+- **✅ Application-specific**: Only traffic routed through the proxy is affected
+- **❌ Transparent Proxy**: Cannot intercept traffic without explicit proxy configuration
+
+### Teams Requirements
+For Cloudflare for Teams usage:
+- Your organization must have **Proxy Mode enabled** in WARP profile settings
+- Navigate to: `Settings > WARP Client > Profile > Service Mode > Proxy`
+- Create a profile specifically for proxy mode if needed
 
 ## 🛠️ Installation & Usage
 
@@ -217,13 +235,16 @@ logging:
 | `WARP_TOKEN` | Teams registration token | None | For Teams usage |
 | `DEBIAN_FRONTEND` | Prevents interactive prompts | `noninteractive` | Yes |
 
-## 🎯 Use Cases
+## 🎯 Use Cases (Proxy Mode Only)
 
-- **Privacy Protection**: Route traffic through Cloudflare's network
-- **Geo-location Bypass**: Access region-restricted content
-- **Corporate Networks**: Teams integration with Zero Trust policies
-- **Development Testing**: Test applications with different IP addresses
-- **Network Security**: Additional layer of traffic encryption
+- **Application-Specific Routing**: Route specific applications through Cloudflare's network
+- **Development Testing**: Test applications with different IP addresses via proxy
+- **API/Web Scraping**: Route HTTP/HTTPS requests through WARP proxy
+- **Corporate Applications**: Teams integration with Zero Trust policies for specific apps
+- **Selective Privacy**: Choose which traffic goes through Cloudflare (not system-wide)
+- **Container Networking**: Route containerized applications through WARP
+
+**Note**: This is not a system-wide VPN - only applications configured to use the SOCKS5 proxy will be routed through WARP.
 
 ## 📞 Support
 
