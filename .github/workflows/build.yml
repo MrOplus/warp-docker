@@ -51,23 +51,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  restart-deployment:
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
-    needs: build-and-push-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restart K8s Deployment Using Shell Script
-        run: |
-          sudo apt update && sudo apt install -y kubectl curl unzip
-          if ! command -v aws &> /dev/null; then
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install --update
-          fi
-          aws sts get-caller-identity
-          aws eks --region us-west-2 update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} 
-          kubectl rollout restart deployment/api-payment
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

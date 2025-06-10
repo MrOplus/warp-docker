@@ -1,9 +1,7 @@
 FROM ubuntu:24.04
 
-ARG WARP_URL="https://downloads.cloudflareclient.com/v1/download/noble-intel/version/2025.4.943.0"
 RUN apt update && apt install -y \
-    wget \
-    libdbus-1-3 \
+    curl \
     iproute2 \
     nftables \
     gnupg2 \
@@ -12,13 +10,16 @@ RUN apt update && apt install -y \
     libnss3-tools \
     libpcap0.8 \
     sudo \
-    dante-server
+    dante-server \
+    supervisor \
+    lsb-release
 
-# Download and install cloudflare-warp
-RUN wget $WARP_URL \
-    -O cloudflare-warp.deb && \
-    dpkg -i cloudflare-warp.deb && \
-    rm cloudflare-warp.deb
+# Add Cloudflare GPG key and repository
+RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+# Install cloudflare-warp from official repository
+RUN apt update && apt install -y cloudflare-warp
 
 # Clean up package cache
 RUN apt clean && \
@@ -34,11 +35,15 @@ exec su -c "$*" warpuser\n\
 ' > /usr/local/bin/run-as-warpuser && chmod +x /usr/local/bin/run-as-warpuser
 
 # Copy configuration files and scripts
-COPY start-proxy.sh /usr/local/bin/start-proxy.sh
+COPY warp-setup.sh /usr/local/bin/warp-setup.sh
 COPY danted.conf /etc/danted.conf
-RUN chmod +x /usr/local/bin/start-proxy.sh
+COPY supervisord.conf /etc/supervisord.conf
+RUN chmod +x /usr/local/bin/warp-setup.sh
+
+# Create supervisor log directory
+RUN mkdir -p /var/log/supervisor
 
 # Expose SOCKS5 proxy port
 EXPOSE 1080
 
-CMD ["/usr/local/bin/start-proxy.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

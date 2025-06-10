@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - WARP_URL=https://downloads.cloudflareclient.com/v1/download/noble-intel/version/2025.4.943.0
     container_name: warp-socks5-proxy
     ports:
       - "51080:1080"

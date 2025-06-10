@@ -91,11 +91,17 @@ ports:
 - **Volume Mount**: `./warp:/var/lib/cloudflare-warp` for persistent config
 - **Health Checks**: Monitors WARP connection status
 
-### start-proxy.sh
-- **WARP Proxy Mode**: Configures WARP on port 40000
+### supervisord.conf
+- **Process Management**: Manages all services with proper dependencies
+- **Service Monitoring**: Automatic restart of failed services
+- **Logging**: Individual log files for each service in `/var/log/supervisor/`
+- **Services Managed**: WARP daemon, WARP setup, Dante proxy (D-Bus not required for proxy mode)
+
+### warp-setup.sh
+- **WARP Configuration**: Configures WARP on port 40000 in proxy mode
 - **Registration Logic**: Handles both consumer and Teams registration
-- **Connection Monitoring**: Retries up to 5 times on failure
-- **Proxy Forwarding**: Uses Dante SOCKS5 server to forward port 1080 to WARP's port 40000
+- **Connection Monitoring**: Continuous monitoring and reconnection logic
+- **Health Checks**: Ensures WARP stays connected
 
 ### danted.conf
 - **SOCKS5 Proxy Server**: Dante server configuration
@@ -114,14 +120,23 @@ Client → SOCKS5 (port 1080) → Dante Proxy → WARP Proxy (port 40000) → Cl
 
 ### Check Status
 ```bash
-# View logs
+# View all container logs
 docker-compose logs -f warp-proxy
+
+# Check supervisord status
+docker exec warp-socks5-proxy supervisorctl status
+
+# Check individual service logs
+docker exec warp-socks5-proxy tail -f /var/log/supervisor/warp-setup.log
+docker exec warp-socks5-proxy tail -f /var/log/supervisor/dante.log
+docker exec warp-socks5-proxy tail -f /var/log/supervisor/warp-svc.log
 
 # Check WARP status inside container
 docker exec warp-socks5-proxy warp-cli status
 
-# Check Dante SOCKS5 proxy status
-docker exec warp-socks5-proxy ps aux | grep danted
+# Restart specific service if needed
+docker exec warp-socks5-proxy supervisorctl restart dante
+docker exec warp-socks5-proxy supervisorctl restart warp-setup
 
 # Test connectivity
 curl --socks5 localhost:51080 https://ipinfo.io
