@@ -66,17 +66,6 @@ environment:
 docker-compose up -d
 ```
 
-### Advanced Configuration
-
-#### Custom WARP Version
-```yaml
-services:
-  warp-proxy:
-    build:
-      args:
-        - WARP_URL=https://downloads.cloudflareclient.com/v1/download/noble-intel/version/CUSTOM_VERSION
-```
-
 #### Different Port Mapping
 ```yaml
 ports:
